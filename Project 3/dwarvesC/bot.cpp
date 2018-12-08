@@ -1,4 +1,4 @@
-
+//C
 #include <cstdlib>
 #include <cmath>
 #include <iostream>
@@ -13,12 +13,11 @@ const int MAX_NUM = 10;
 int ROWS;  // global variables
 int COLS;
 int NUM;
-bool walked, walked1, walked2, walked3, walked4, walked5;
-int increment, increment1, increment2, increment3, increment4, increment5;
-bool TimeToBuild;
-bool Active;
-double changingRow;
 
+double changingRow;
+double sectorCols[8];
+Dir dirs[8];
+bool walked[8];
 
 //isNextToAtree
 //Returns true if there is atleast one tree adjacent to the location
@@ -37,27 +36,6 @@ bool isNextToAPineTree(Dwarf & dwarf, int r, int c){
   return false;
 }
 
-/*
-  Dir isNextToAPineTree(Dwarf & dwarf, int r, int c){
-  Place temp1 = dwarf.look(r+1,c); 
-  Place temp2 = dwarf.look(r-1,c);
-  Place temp3 = dwarf.look(r,c+1);
-  Place temp4 = dwarf.look(r,c-1);
-  if(temp1 == PINE_TREE){
-  return SOUTH;
-  }
-  if(temp2 == PINE_TREE){
-  return NORTH;
-  }
-  if(temp3 == PINE_TREE){
-  return EAST;
-  }
-  if(temp4 == PINE_TREE){
-  return WEST;
-  }
-  return NULL;
-  }
-*/
 
 /* onStart: 
    An Initialization procedure called at the start of the game.
@@ -76,7 +54,32 @@ void onStart(int rows, int cols, int num, std::ostream &log) {
   COLS = cols;
   NUM = num;
 
-  
+  if(NUM == 6){
+    sectorCols[0] = 1/3;
+    sectorCols[1] = 2/3;
+    sectorCols[2] = 1;
+    sectorCols[3] = 1/3;
+    sectorCols[4] = 2/3;
+    sectorCols[5] = 1; 
+  }
+  if(NUM == 7){
+    sectorCols[0] = 1/3;
+    sectorCols[1] = 2/3;
+    sectorCols[2] = 1;
+    sectorCols[3] = 1/3;
+    sectorCols[4] = 2/3;
+    sectorCols[5] = 1; 
+  }
+  if(NUM == 8){
+    sectorCols[0] = 1/4;
+    sectorCols[1] = 1/2;
+    sectorCols[2] = 3/4;
+    sectorCols[3] = 1;
+    sectorCols[4] = 1/4;
+    sectorCols[5] = 1/2;
+    sectorCols[6] = 3/4;
+    sectorCols[7] = 1;
+  }
   
 }
 
@@ -95,28 +98,52 @@ void onAction(Dwarf &dwarf, int day, int hours, int minutes, ostream &log) {
   int r = dwarf.row();
   int c = dwarf.col();
 
-  if(day == 1){
-    if(hours < 21){//First DayTime
-      
-    }
-    else{//First NightTime
-      
-    }
-  }
-
-
   if(day < 3){
-    if(dwarf.name() > (num/2 -1)){
+    if(dwarf.name() > (NUM/2 -1)){
       changingRow = 0.5;
     }
 
-    for(int row = changingRow * ROWS; i < (int)(rows * (0.5 + changingRow)); i++){
-      for(int col = 
+    if(walked[dwarf.name()] == false){
+      //log << "Test1" << endl;
+      for(int row = changingRow * ROWS; row < (int)(ROWS * (0.5 + changingRow)); row++){//Tell dwarfs where to walk to get PINE_TREE
+	for(int col = (int)(sectorCols[dwarf.name()%(NUM/2)] * COLS); col < (int) (sectorCols[dwarf.name()%(NUM/2) + 1] * COLS); col++){
+	 
+	  if(isNextToAPineTree(dwarf,row,col) == true){
+	   
+	    if(dwarf.look(r,c+1) == PINE_TREE){
+	      dirs[dwarf.name()] == EAST;
+	    }
+	    if(dwarf.look(r+1,c) == PINE_TREE){
+	      dirs[dwarf.name()] == SOUTH;
+	    }
+	    if(dwarf.look(r-1,c) == PINE_TREE){
+	      dirs[dwarf.name()] == NORTH;
+	    }
+	    if(dwarf.look(r,c-1) == PINE_TREE){
+	      dirs[dwarf.name()] == WEST;
+	    }
+	    
+	    log << "Found tree -- walking NAME:" << dwarf.name() << endl;
+	    dwarf.start_walk(row,col);
+	    walked[dwarf.name()] = true;
+	    return;
+	  }
+	}
+      }
     }
-
-
-    
+    else{//if walked is true
+      
+      log << "Chop" << " Name: " << dwarf.name() << endl;
+      dwarf.start_chop(dirs[dwarf.name()]);
+      walked[dwarf.name()] = false;
+      return;
+    }
   }
+	    
+	    
+	    
+	    
+	    
 
   
 
