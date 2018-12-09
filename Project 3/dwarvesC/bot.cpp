@@ -18,6 +18,8 @@ double changingRow;
 double sectorCols[8];
 Dir dirs[8];
 bool walked[8];
+bool emptyPine;
+Dir buildDirs[8];
 
 //isNextToAtree
 //Returns true if there is atleast one tree adjacent to the location
@@ -90,72 +92,82 @@ void onStart(int rows, int cols, int num, std::ostream &log) {
 void onAction(Dwarf &dwarf, int day, int hours, int minutes, ostream &log) {
   changingRow = 0;
 
-  if(walked[dwarf.name()] == true){
-      log << "Chop" << " Name: " << dwarf.name() << endl;
-      dwarf.start_chop(dirs[dwarf.name()]);
-      walked[dwarf.name()] = false;
-      return;
-}
+  if(walked[dwarf.name()] == true && hours < 21){
+    log << "Chop" << " Name: " << dwarf.name() << endl;
+    dwarf.start_chop(dirs[dwarf.name()]);
+    walked[dwarf.name()] = false;
+    return;
+  }
 
-  if(day < 3){
+  if(emptyPine == false && hours < 21){
     if(dwarf.name() > (NUM/2 -1)){
       changingRow = 0.5;
     }
 
     
-      for(int row = changingRow * ROWS; row < (int)(ROWS * (0.5 + changingRow)); row++){//Tell dwarfs where to walk to get PINE_TREE
-	for(int col = (int)(sectorCols[dwarf.name()%(NUM/2)] * COLS); col < (int) (sectorCols[dwarf.name()%(NUM/2) + 1] * COLS); col++){
+    for(int row = changingRow * ROWS; row < (int)(ROWS * (0.5 + changingRow)); row++){//Tell dwarfs where to walk to get PINE_TREE
+      for(int col = (int)(sectorCols[dwarf.name()%(NUM/2)] * COLS); col < (int) (sectorCols[dwarf.name()%(NUM/2) + 1] * COLS); col++){
 	log << dwarf.name() << " " << changingRow * ROWS << " " << (int)(ROWS * (0.5 + changingRow)) << "\n";
 	log << dwarf.name() << " " << (int)(sectorCols[dwarf.name()%(NUM/2)] * COLS) << " " << (int) (sectorCols[dwarf.name()%(NUM/2) + 1] * COLS) << "\n";
 	if(dwarf.look(row,col) == EMPTY){
 	   
-	    if(dwarf.look(row,col+1) == PINE_TREE){
-	      dirs[dwarf.name()] = EAST;
-              log << "Found tree -- walking NAME:" << dwarf.name() << endl;
-	      walked[dwarf.name()] = true;
-	      dwarf.start_walk(row,col);
-	      
-	      return;
-	    }
-	    if(dwarf.look(row+1,col) == PINE_TREE){
-	      dirs[dwarf.name()] = SOUTH;
-	      log << "Found tree -- walking NAME:" << dwarf.name() << endl;
-	      walked[dwarf.name()] = true;
-	      dwarf.start_walk(row,col);
-	      
-	      return;
-	    }
-	    if(dwarf.look(row-1,col) == PINE_TREE){
-	      dirs[dwarf.name()] = NORTH;
-	      log << "Found tree -- walking NAME:" << dwarf.name() << endl;
-	      walked[dwarf.name()] = true;
-	      dwarf.start_walk(row,col);
-	      
-	      return;
-	    }
-	    if(dwarf.look(row,col-1) == PINE_TREE){
-	      dirs[dwarf.name()] = WEST;
-	      log << "Found tree -- walking NAME:" << dwarf.name() << endl;
-	      walked[dwarf.name()] = true;
-	      dwarf.start_walk(row,col);
-	     
-	      return;
-	    }
+	  if(dwarf.look(row,col+1) == PINE_TREE){
+	    dirs[dwarf.name()] = EAST;
+	    log << "Found tree -- walking NAME:" << dwarf.name() << endl;
+	    walked[dwarf.name()] = true;
+	    dwarf.start_walk(row,col);
+	    return;
 	  }
+	  if(dwarf.look(row+1,col) == PINE_TREE){
+	    dirs[dwarf.name()] = SOUTH;
+	    log << "Found tree -- walking NAME:" << dwarf.name() << endl;
+	    walked[dwarf.name()] = true;
+	    dwarf.start_walk(row,col);
+	    return;
+	  }
+	  if(dwarf.look(row-1,col) == PINE_TREE){
+	    dirs[dwarf.name()] = NORTH;
+	    log << "Found tree -- walking NAME:" << dwarf.name() << endl;
+	    walked[dwarf.name()] = true;
+	    dwarf.start_walk(row,col);
+	    return;
+	  }
+	  if(dwarf.look(row,col-1) == PINE_TREE){
+	    dirs[dwarf.name()] = WEST;
+	    log << "Found tree -- walking NAME:" << dwarf.name() << endl;
+	    walked[dwarf.name()] = true;
+	    dwarf.start_walk(row,col);
+	    return;
+	  }	  
 	}
       }
-      //}
+    }
+    emptyPine = true;
   }
-	    
-	    
-	    
-	    
-	    
-
   
+  if(hours > 21){
 
-
-
+    if(buildDirs[dwarf.name()] == WEST){
+      dwarf.start_build(WEST);
+      buildDirs[dwarf.name()] = EAST;
+      return;
+    }
+    if(buildDirs[dwarf.name()] == EAST){
+      dwarf.start_build(EAST);
+      buildDirs[dwarf.name()] = NORTH;
+      return;
+    }
+    if(buildDirs[dwarf.name()] == NORTH){
+      dwarf.start_build(NORTH);
+      buildDirs[dwarf.name()] = SOUTH;
+      return;
+    }
+    if(buildDirs[dwarf.name()] == SOUTH){
+      dwarf.start_build(SOUTH);
+      // buildDirs[dwarf.name()];
+      return;
+    }
+  }
 
 
 
