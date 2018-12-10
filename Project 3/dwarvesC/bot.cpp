@@ -18,7 +18,7 @@ double changingRow;
 double sectorCols[8];
 Dir dirs[8];
 bool walked[8];
-bool emptyPine;
+bool emptyPine[8];
 Dir buildDirs[8];
 
 //isNextToAtree
@@ -61,7 +61,6 @@ void onStart(int rows, int cols, int num, std::ostream &log) {
     sectorCols[1] = 1.0/3;
     sectorCols[2] = 2.0/3;
     sectorCols[3] = 1;
-
   }
   if(NUM == 7){
     sectorCols[0] = 0;
@@ -92,14 +91,14 @@ void onStart(int rows, int cols, int num, std::ostream &log) {
 void onAction(Dwarf &dwarf, int day, int hours, int minutes, ostream &log) {
   changingRow = 0;
 
-  if(walked[dwarf.name()] == true && hours < 21){
+  if(walked[dwarf.name()] == true && (hours < 21 || hours > 6)){
     log << "Chop" << " Name: " << dwarf.name() << endl;
     dwarf.start_chop(dirs[dwarf.name()]);
     walked[dwarf.name()] = false;
     return;
   }
 
-  if(emptyPine == false && hours < 21){
+  if(emptyPine[dwarf.name()] == false && (hours < 21 || hours > 6)){
     if(dwarf.name() > (NUM/2 -1)){
       changingRow = 0.5;
     }
@@ -107,8 +106,8 @@ void onAction(Dwarf &dwarf, int day, int hours, int minutes, ostream &log) {
     
     for(int row = changingRow * ROWS; row < (int)(ROWS * (0.5 + changingRow)); row++){//Tell dwarfs where to walk to get PINE_TREE
       for(int col = (int)(sectorCols[dwarf.name()%(NUM/2)] * COLS); col < (int) (sectorCols[dwarf.name()%(NUM/2) + 1] * COLS); col++){
-	log << dwarf.name() << " " << changingRow * ROWS << " " << (int)(ROWS * (0.5 + changingRow)) << "\n";
-	log << dwarf.name() << " " << (int)(sectorCols[dwarf.name()%(NUM/2)] * COLS) << " " << (int) (sectorCols[dwarf.name()%(NUM/2) + 1] * COLS) << "\n";
+	//log << dwarf.name() << " " << changingRow * ROWS << " " << (int)(ROWS * (0.5 + changingRow)) << "\n";
+	//log << dwarf.name() << " " << (int)(sectorCols[dwarf.name()%(NUM/2)] * COLS) << " " << (int) (sectorCols[dwarf.name()%(NUM/2) + 1] * COLS) << "\n";
 	if(dwarf.look(row,col) == EMPTY){
 	   
 	  if(dwarf.look(row,col+1) == PINE_TREE){
@@ -142,10 +141,10 @@ void onAction(Dwarf &dwarf, int day, int hours, int minutes, ostream &log) {
 	}
       }
     }
-    emptyPine = true;
+    emptyPine[dwarf.name()] = true;
   }
   
-  if(hours > 21){
+  if(hours > 21 || hours < 6){//Night Hiding Spaces
 
     if(buildDirs[dwarf.name()] == WEST){
       dwarf.start_build(WEST);
@@ -164,7 +163,6 @@ void onAction(Dwarf &dwarf, int day, int hours, int minutes, ostream &log) {
     }
     if(buildDirs[dwarf.name()] == SOUTH){
       dwarf.start_build(SOUTH);
-      // buildDirs[dwarf.name()];
       return;
     }
   }
