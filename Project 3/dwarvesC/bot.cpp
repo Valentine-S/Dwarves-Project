@@ -20,6 +20,7 @@ Dir dirs[8];
 bool walked[8];
 bool emptyPine[8];
 Dir buildDirs[8];
+bool chopNeeded[8];
 
 //isNextToAtree
 //Returns true if there is atleast one tree adjacent to the location
@@ -91,29 +92,28 @@ void onStart(int rows, int cols, int num, std::ostream &log) {
 void onAction(Dwarf &dwarf, int day, int hours, int minutes, ostream &log) {
   changingRow = 0;
 
-  if(walked[dwarf.name()] == true && (hours < 21 || hours > 6)){
+  if(walked[dwarf.name()] == true && chopNeeded[dwarf.name()] == true && (hours < 20 && hours > 6)){
     log << "Chop" << " Name: " << dwarf.name() << endl;
     dwarf.start_chop(dirs[dwarf.name()]);
     walked[dwarf.name()] = false;
+    chopNeeded[dwarf.name()] = false;
     return;
   }
 
-  if(emptyPine[dwarf.name()] == false && (hours < 21 || hours > 6)){
+  if(emptyPine[dwarf.name()] == false && (hours < 21 || hours > 6)){//DayTime Pine Tree. Finding and walking.
     if(dwarf.name() > (NUM/2 -1)){
       changingRow = 0.5;
     }
-
-    
     for(int row = changingRow * ROWS; row < (int)(ROWS * (0.5 + changingRow)); row++){//Tell dwarfs where to walk to get PINE_TREE
       for(int col = (int)(sectorCols[dwarf.name()%(NUM/2)] * COLS); col < (int) (sectorCols[dwarf.name()%(NUM/2) + 1] * COLS); col++){
 	//log << dwarf.name() << " " << changingRow * ROWS << " " << (int)(ROWS * (0.5 + changingRow)) << "\n";
 	//log << dwarf.name() << " " << (int)(sectorCols[dwarf.name()%(NUM/2)] * COLS) << " " << (int) (sectorCols[dwarf.name()%(NUM/2) + 1] * COLS) << "\n";
-	if(dwarf.look(row,col) == EMPTY){
-	   
+	if(dwarf.look(row,col) == EMPTY){ 
 	  if(dwarf.look(row,col+1) == PINE_TREE){
 	    dirs[dwarf.name()] = EAST;
 	    log << "Found tree -- walking NAME:" << dwarf.name() << endl;
 	    walked[dwarf.name()] = true;
+	    chopNeeded[dwarf.name()] = true;
 	    dwarf.start_walk(row,col);
 	    return;
 	  }
@@ -121,6 +121,7 @@ void onAction(Dwarf &dwarf, int day, int hours, int minutes, ostream &log) {
 	    dirs[dwarf.name()] = SOUTH;
 	    log << "Found tree -- walking NAME:" << dwarf.name() << endl;
 	    walked[dwarf.name()] = true;
+	    chopNeeded[dwarf.name()] = true;
 	    dwarf.start_walk(row,col);
 	    return;
 	  }
@@ -128,6 +129,7 @@ void onAction(Dwarf &dwarf, int day, int hours, int minutes, ostream &log) {
 	    dirs[dwarf.name()] = NORTH;
 	    log << "Found tree -- walking NAME:" << dwarf.name() << endl;
 	    walked[dwarf.name()] = true;
+	    chopNeeded[dwarf.name()] = true;
 	    dwarf.start_walk(row,col);
 	    return;
 	  }
@@ -135,6 +137,7 @@ void onAction(Dwarf &dwarf, int day, int hours, int minutes, ostream &log) {
 	    dirs[dwarf.name()] = WEST;
 	    log << "Found tree -- walking NAME:" << dwarf.name() << endl;
 	    walked[dwarf.name()] = true;
+	    chopNeeded[dwarf.name()] = true;
 	    dwarf.start_walk(row,col);
 	    return;
 	  }	  
@@ -144,8 +147,7 @@ void onAction(Dwarf &dwarf, int day, int hours, int minutes, ostream &log) {
     emptyPine[dwarf.name()] = true;
   }
   
-  if(hours > 21 || hours < 6){//Night Hiding Spaces
-
+  if(hours > 20 || hours < 6){//Night Hiding Spaces
     if(buildDirs[dwarf.name()] == WEST){
       dwarf.start_build(WEST);
       buildDirs[dwarf.name()] = EAST;
