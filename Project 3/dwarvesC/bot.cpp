@@ -26,10 +26,12 @@ bool pickNeeded[8];
 bool isNextToApple[8];
 bool hidden[8];
 bool emptyPump;
+int increment[8];
+int colInc[8] = {0,1,2,3,4,5,6,7};
 
 bool isDayTime(int hours, int min){
   int temp = (hours * 60) + min;
-  if (temp > 360 && temp < 1260){
+  if (temp > 360 && temp < 1230){
     return true;
   }
   else{
@@ -107,7 +109,35 @@ void onStart(int rows, int cols, int num, std::ostream &log) {
 void onAction(Dwarf &dwarf, int day, int hours, int minutes, ostream &log) {
   changingRow = 0;
 
-  if(isDayTime(hours,minutes) == false && isNextToApple[dwarf.name()] && hidden[dwarf.name()] == false){
+  if((isDayTime(hours,minutes) && day > 6 && freed[dwarf.name()]) && dwarf.lumber() > NUM*25){//emptyPump == true
+    if(walked[dwarf.name()] == true && dwarf.look(ROWS/2 + increment[dwarf.name()],COLS/2 + colInc[dwarf.name()]) == EMPTY){
+      dwarf.start_build(NORTH);
+      walked[dwarf.name()] = false;
+      return;
+    }
+    else if(walked[dwarf.name()] && dwarf.look(ROWS/2 + increment[dwarf.name()],COLS/2 + colInc[dwarf.name()]) != EMPTY){
+      if(dwarf.look(ROWS/2 + increment[dwarf.name()],COLS/2 + colInc[dwarf.name()]) == PUMPKIN){
+	log << "Found a Pumpkin" << endl;
+	dwarf.start_pick(SOUTH);				 
+	return;
+      }
+      else{
+	log << "CHOP" << endl;
+	dwarf.start_chop(SOUTH);
+	return;
+      }
+    }
+    else{
+      log << "Walk to " << ROWS/2 + increment[dwarf.name()] << " " << COLS/2 + colInc[dwarf.name()] << endl;
+      dwarf.start_walk(ROWS/2 + increment[dwarf.name()], COLS/2 + colInc[dwarf.name()]);
+      (increment[dwarf.name()])++;
+      walked[dwarf.name()] = true;
+      return;
+    }   
+  }
+  
+  
+  if((isDayTime(hours,minutes) == false && isNextToApple[dwarf.name()] && hidden[dwarf.name()] == false) || (dwarf.lumber() < NUM*25 && day > 5)){
     log << "Build" << dwarf.name() << "\n";
     if(buildDirs[dwarf.name()] == WEST){
       dwarf.start_build(WEST);
@@ -160,6 +190,28 @@ void onAction(Dwarf &dwarf, int day, int hours, int minutes, ostream &log) {
     hidden[dwarf.name()] = false;
     return;
   }
+
+  if(day > 6 && freed[dwarf.name()] == false && isDayTime(hours,minutes)){//Free all the dwarves
+    if(dwarf.look(dwarf.row()+1,dwarf.col()) == FENCE){
+      dwarf.start_chop(SOUTH);
+      return;
+    }
+    if(dwarf.look(dwarf.row(),dwarf.col()+1) == FENCE){
+      dwarf.start_chop(EAST);
+      return;
+    }
+    if(dwarf.look(dwarf.row(),dwarf.col()-1) == FENCE){
+      dwarf.start_chop(WEST);
+      return;
+    }
+    if(dwarf.look(dwarf.row()-1,dwarf.col()) == FENCE){
+      dwarf.start_chop(NORTH);
+      return;
+    }
+    freed[dwarf.name()] = true;
+    return;
+  }
+  
 
   if(isNextToApple[dwarf.name()] && hidden[dwarf.name()]){ //isDayTime(hours,minutes) == false
     //log << "Pick" << " Name: " << dwarf.name() << endl;
