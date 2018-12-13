@@ -162,7 +162,7 @@ void onAction(Dwarf &dwarf, int day, int hours, int minutes, ostream &log) {
 	  }
 	}
       }
-      emptyPine[dwarf.name()] = true;
+      emptyPine[dwarf.name()] = true;// true when the dwarfs sector has no more pine trees
       return;
     }
   }
@@ -172,7 +172,7 @@ void onAction(Dwarf &dwarf, int day, int hours, int minutes, ostream &log) {
       changingRow = 0.5;
     }
     for(int row = changingRow * ROWS; row < (int)(ROWS * (0.5 + changingRow)); row++){//Find an apple tree and walk there
-      for(int col = (int)(sectorCols[dwarf.name()%(NUM/2)] * COLS); col < (int) (sectorCols[dwarf.name()%(NUM/2) + 1] * COLS); col++){
+      for(int col = (int)(sectorCols[dwarf.name()%(NUM/2)] * COLS); col < (int) (sectorCols[dwarf.name()%(NUM/2) + 1] * COLS); col++){//This nested for loop splits the board up into 6 sections and assigns a dwarf to each
 	if(dwarf.look(row,col) == EMPTY){
 	  if(dwarf.look(row,col+1) == APPLE_TREE){
 	    dirs[dwarf.name()] = EAST;
@@ -398,7 +398,7 @@ void onAction(Dwarf &dwarf, int day, int hours, int minutes, ostream &log) {
 	}
       }
     }
-    emptyPump = true;
+    emptyPump = true;//true when the dwarfs sector has no pumpkins
   }
 
   
