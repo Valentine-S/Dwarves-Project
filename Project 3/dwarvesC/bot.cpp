@@ -208,7 +208,8 @@ void onAction(Dwarf &dwarf, int day, int hours, int minutes, ostream &log) {
   }
 
   //Build hiding spots for the night
-  if(walkedToApple[dwarf.name()] && isDayTime(hours,minutes) == false && hidden[dwarf.name()] == false){
+  if(walkedToApple[dwarf.name()] && isDayTime(hours,minutes) == false){ //&& hidden[dwarf.name()] == false
+    
     if(dwarf.look(dwarf.row(),dwarf.col()+1) == EMPTY){
       dwarf.start_build(EAST);
       return;
