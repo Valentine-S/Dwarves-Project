@@ -39,6 +39,8 @@ bool isDayTime(int hours, int min){
   }
 }
 
+//Is not used in this code. Thought it may be useful, turned out
+//Not to be needed.
 Loc closestApple(Dwarf &dwarf){
   Loc ans;
   int distance = 9999;
@@ -56,7 +58,16 @@ Loc closestApple(Dwarf &dwarf){
   return ans;
 }
 
-//ONSTART
+/* onStart: 
+   An Initialization procedure called at the start of the game.
+   You can use it to initialize certain global variables, or do 
+   something else before the actual simulation starts.
+   Parameters:
+   rows: number of rows
+   cols: number of columns
+   num:  number of dwarfs
+   log:  a cout-like log */
+
 void onStart(int rows, int cols, int num, std::ostream &log) {
   log << "Start!" << endl; // Print a greeting message
 
@@ -85,7 +96,16 @@ void onStart(int rows, int cols, int num, std::ostream &log) {
   }
 }
 
-//ONACTION
+/* onAction: 
+   A procedure called each time an idle dwarf is choosing 
+   their next action.
+   Parameters:
+   dwarf:   dwarf choosing an action
+   day:     day (1+)
+   hours:   number of hours in 24-hour format (0-23)
+   minutes: number of minutes (0-59)
+   log:     a cout-like log  */
+
 void onAction(Dwarf &dwarf, int day, int hours, int minutes, ostream &log) {
   changingRow = 0; //resets the changing row
 
