@@ -1,4 +1,4 @@
-//C1
+//C2
 #include <cstdlib>
 #include <cmath>
 #include <iostream>
@@ -23,7 +23,7 @@ Dir buildDirs[8];
 bool chopNeeded[8];
 bool freed[8];
 bool pickNeeded[8];
-bool isNextToApple[8];
+bool walkedToApple[8];
 bool hidden[8];
 bool emptyPump;
 int increment[8];
@@ -56,18 +56,7 @@ Loc closestApple(Dwarf &dwarf){
   return ans;
 }
 
-
-
-/* onStart: 
-   An Initialization procedure called at the start of the game.
-   You can use it to initialize certain global variables, or do 
-   something else before the actual simulation starts.
-   Parameters:
-   rows: number of rows
-   cols: number of columns
-   num:  number of dwarfs
-   log:  a cout-like log */
-
+//ONSTART
 void onStart(int rows, int cols, int num, std::ostream &log) {
   log << "Start!" << endl; // Print a greeting message
 
@@ -96,20 +85,157 @@ void onStart(int rows, int cols, int num, std::ostream &log) {
   }
 }
 
-/* onAction: 
-   A procedure called each time an idle dwarf is choosing 
-   their next action.
-   Parameters:
-   dwarf:   dwarf choosing an action
-   day:     day (1+)
-   hours:   number of hours in 24-hour format (0-23)
-   minutes: number of minutes (0-59)
-   log:     a cout-like log  */
-
+//ONACTION
 void onAction(Dwarf &dwarf, int day, int hours, int minutes, ostream &log) {
-  changingRow = 0;
+  changingRow = 0; //resets the changing row
 
-  if((isDayTime(hours,minutes) && day > 6 && freed[dwarf.name()]) && dwarf.lumber() > NUM*25){//emptyPump == true
+  
+  if(day < 3 && isDayTime(hours,minutes)){//First 2 days, Chop Pine
+
+    if(chopNeeded[dwarf.name()] == true && walked[dwarf.name()] == true){//Chop Pine
+      log << "Chop" << endl;
+      dwarf.start_chop(dirs[dwarf.name()]);
+      walked[dwarf.name()] = false;
+      chopNeeded[dwarf.name()] = false;
+      return;
+    }
+    
+    if(dwarf.name() > (NUM/2 - 1)){//Set the Changing Row for the nested for loop
+      changingRow = 0.5;
+    }
+    if(emptyPine[dwarf.name()] == false){//Find a Pine and walk there
+      for(int row = changingRow * ROWS; row < (int)(ROWS * (0.5 + changingRow)); row++){
+	for(int col = (int)(sectorCols[dwarf.name()%(NUM/2)] * COLS); col < (int) (sectorCols[dwarf.name()%(NUM/2) + 1] * COLS); col++){
+	  if(dwarf.look(row,col) == EMPTY){
+	    if(dwarf.look(row,col+1) == PINE_TREE){
+	      dirs[dwarf.name()] = EAST;
+	      log << "Found tree -- walking" << endl;
+	      walked[dwarf.name()] = true;
+	      chopNeeded[dwarf.name()] = true;
+	      dwarf.start_walk(row,col);
+	      return;
+	    }
+	    if(dwarf.look(row+1,col) == PINE_TREE){
+	      dirs[dwarf.name()] = SOUTH;
+	      log << "Found tree -- walking" << endl;
+	      walked[dwarf.name()] = true;
+	      chopNeeded[dwarf.name()] = true;
+	      dwarf.start_walk(row,col);
+	      return;
+	    }
+	    if(dwarf.look(row-1,col) == PINE_TREE){
+	      dirs[dwarf.name()] = NORTH;
+	      log << "Found tree -- walking" << endl;
+	      walked[dwarf.name()] = true;
+	      chopNeeded[dwarf.name()] = true;
+	      dwarf.start_walk(row,col);
+	      return;
+	    }
+	    if(dwarf.look(row,col-1) == PINE_TREE){
+	      dirs[dwarf.name()] = WEST;
+	      log << "Found tree -- walking" << endl;
+	      walked[dwarf.name()] = true;
+	      chopNeeded[dwarf.name()] = true;
+	      dwarf.start_walk(row,col);
+	      return;
+	    }
+	  }
+	}
+      }
+      emptyPine[dwarf.name()] = true;
+      return;
+    }
+  }
+  
+  if(walkedToApple[dwarf.name()] == false && isDayTime(hours,minutes) == false){
+    if(dwarf.name() > (NUM/2 - 1)){//Set the Changing Row for the nested for loop
+      changingRow = 0.5;
+    }
+    for(int row = changingRow * ROWS; row < (int)(ROWS * (0.5 + changingRow)); row++){//Find an apple tree and walk there
+      for(int col = (int)(sectorCols[dwarf.name()%(NUM/2)] * COLS); col < (int) (sectorCols[dwarf.name()%(NUM/2) + 1] * COLS); col++){
+	if(dwarf.look(row,col) == EMPTY){
+	  if(dwarf.look(row,col+1) == APPLE_TREE){
+	    dirs[dwarf.name()] = EAST;
+	    log << "Found Apple -- Walking" << endl;
+	    walkedToApple[dwarf.name()] = true;
+	    dwarf.start_walk(row,col);
+	    return;
+	  }
+	  if(dwarf.look(row+1,col) == APPLE_TREE){
+	    dirs[dwarf.name()] = SOUTH;
+	    log << "Found Apple -- Walking" << endl;
+	    walkedToApple[dwarf.name()] = true;
+	    dwarf.start_walk(row,col);
+	    return;
+	  }
+	  if(dwarf.look(row-1,col) == APPLE_TREE){
+	    dirs[dwarf.name()] = NORTH;
+	    log << "Found Apple -- Walking" << endl;
+	    walkedToApple[dwarf.name()] = true;
+	    dwarf.start_walk(row,col);
+	    return;
+	  }
+	  if(dwarf.look(row,col-1) == APPLE_TREE){
+	    dirs[dwarf.name()] = WEST;
+	    log << "Found Apple -- Walking" << endl;
+	    walkedToApple[dwarf.name()] = true;
+	    dwarf.start_walk(row,col);
+	    return;
+	  }
+	}
+      }
+    }    
+  }
+
+  //Build hiding spots for the night
+  if(walkedToApple[dwarf.name()] && isDayTime(hours,minutes) == false && hidden[dwarf.name()] == false){
+    if(dwarf.look(dwarf.row(),dwarf.col()+1) == EMPTY){
+      dwarf.start_build(EAST);
+      return;
+    }
+    if(dwarf.look(dwarf.row()+1,dwarf.col()) == EMPTY){
+      dwarf.start_build(SOUTH);
+      return;
+    }
+    if(dwarf.look(dwarf.row()-1,dwarf.col()) == EMPTY){
+      dwarf.start_build(NORTH);
+      return;
+    }
+    if(dwarf.look(dwarf.row(),dwarf.col()-1) == EMPTY){
+      dwarf.start_build(WEST);
+      return;
+    }
+    hidden[dwarf.name()] = true;
+    return;
+  }
+
+  //Free all the dwarves on the last day
+  if(hidden[dwarf.name()] && day == 7 && isDayTime(hours,minutes)){
+    if(dwarf.look(dwarf.row()+1,dwarf.col()) == FENCE){
+      dwarf.start_chop(SOUTH);
+      return;
+    }
+    if(dwarf.look(dwarf.row(),dwarf.col()+1) == FENCE){
+      dwarf.start_chop(EAST);
+      return;
+    }
+    if(dwarf.look(dwarf.row(),dwarf.col()-1) == FENCE){
+      dwarf.start_chop(WEST);
+      return;
+    }
+    if(dwarf.look(dwarf.row()-1,dwarf.col()) == FENCE){
+      dwarf.start_chop(NORTH);
+      return;
+    }
+    hidden[dwarf.name()] = false;
+    emptyPump = false;
+    pickNeeded[dwarf.name()] = false;
+    walked[dwarf.name()] = false;
+    return;
+  }
+
+  //Build the final Structure
+  if(day == 7 && hours > 12 && hours < 20 && dwarf.lumber() > NUM*25){
     if(walked[dwarf.name()] == true && dwarf.look(ROWS/2 + increment[dwarf.name()],COLS/2 + colInc[dwarf.name()]) == EMPTY){
       dwarf.start_build(NORTH);
       walked[dwarf.name()] = false;
@@ -133,308 +259,142 @@ void onAction(Dwarf &dwarf, int day, int hours, int minutes, ostream &log) {
       (increment[dwarf.name()])++;
       walked[dwarf.name()] = true;
       return;
-    }   
-  }
-  
-  
-  if((isDayTime(hours,minutes) == false && isNextToApple[dwarf.name()] && hidden[dwarf.name()] == false) || (dwarf.lumber() < NUM*25 && day > 5)){
-    log << "Build" << dwarf.name() << "\n";
-    if(buildDirs[dwarf.name()] == WEST){
-      dwarf.start_build(WEST);
-      buildDirs[dwarf.name()] = EAST;
-      return;
-    }
-    if(buildDirs[dwarf.name()] == EAST){
-      dwarf.start_build(EAST);
-      buildDirs[dwarf.name()] = NORTH;
-      return;
-    }
-    if(buildDirs[dwarf.name()] == NORTH){
-      dwarf.start_build(NORTH);
-      buildDirs[dwarf.name()] = SOUTH;
-      return;
-    }
-    if(buildDirs[dwarf.name()] == SOUTH){
-      dwarf.start_build(SOUTH);
-      freed[dwarf.name()] = false;
-      buildDirs[dwarf.name()] = WEST;
-      hidden[dwarf.name()] = true;
-      return;
     }
   }
 
- 
-
-  if(dwarf.name() == 5 && isDayTime(hours,minutes) && day > 1 && day < 8 && hidden[dwarf.name()] == true){ //Free the 5th dwarf
+  
+  //Free the last 2 dwaves during the day
+  if(hidden[dwarf.name()] && day > 4 && day < 7 && isDayTime(hours, minutes) && dwarf.name() > (NUM - 3)){
     if(dwarf.look(dwarf.row()+1,dwarf.col()) == FENCE){
       dwarf.start_chop(SOUTH);
-      //freed[dwarf.name()] = true;
       return;
     }
     if(dwarf.look(dwarf.row(),dwarf.col()+1) == FENCE){
       dwarf.start_chop(EAST);
-      //freed[dwarf.name()] = true;
       return;
     }
     if(dwarf.look(dwarf.row(),dwarf.col()-1) == FENCE){
       dwarf.start_chop(WEST);
-      //freed[dwarf.name()] = true;
       return;
     }
     if(dwarf.look(dwarf.row()-1,dwarf.col()) == FENCE){
       dwarf.start_chop(NORTH);
       return;
     }
-    freed[dwarf.name()] = true;
-    emptyPump = false;
     hidden[dwarf.name()] = false;
+    emptyPump = false;
     return;
   }
 
-  if(day > 6 && freed[dwarf.name()] == false && isDayTime(hours,minutes)){//Free all the dwarves
-    if(dwarf.look(dwarf.row()+1,dwarf.col()) == FENCE){
-      dwarf.start_chop(SOUTH);
-      return;
-    }
-    if(dwarf.look(dwarf.row(),dwarf.col()+1) == FENCE){
-      dwarf.start_chop(EAST);
-      return;
-    }
-    if(dwarf.look(dwarf.row(),dwarf.col()-1) == FENCE){
-      dwarf.start_chop(WEST);
-      return;
-    }
-    if(dwarf.look(dwarf.row()-1,dwarf.col()) == FENCE){
-      dwarf.start_chop(NORTH);
-      return;
-    }
-    freed[dwarf.name()] = true;
-    return;
-  }
-  
-
-  if(isNextToApple[dwarf.name()] && hidden[dwarf.name()]){ //isDayTime(hours,minutes) == false
-    //log << "Pick" << " Name: " << dwarf.name() << endl;
+  //Tell the dwarves to pick pumpkins after they walked to one
+  if(dwarf.name() > (NUM -3) && isDayTime(hours,minutes) && walked[dwarf.name()] && pickNeeded[dwarf.name()]){
+    log << "Pick Pumpkin" << endl;
     dwarf.start_pick(dirs[dwarf.name()]);
-    // hidden[dwarf.name()] = false;
-    return;
-  }
-
-  if(pickNeeded[dwarf.name()] && isDayTime(hours,minutes)){
-      dwarf.start_pick(dirs[dwarf.name()]);
-      pickNeeded[dwarf.name()] = false;
-      return;
-    }
-
-  if(walked[dwarf.name()] == true && chopNeeded[dwarf.name()] == true && isDayTime(hours,minutes)){//Tells dwarf to chop
-    log << "Chop" << " Name: " << dwarf.name() << endl;
-    dwarf.start_chop(dirs[dwarf.name()]);
     walked[dwarf.name()] = false;
-    chopNeeded[dwarf.name()] = false;
+    pickNeeded[dwarf.name()] = false;
     return;
   }
 
   
-  if(emptyPump == false){
-    for(int row = 1; row < ROWS-1; row++){
-      for(int col = 1; col < COLS-1; col++){
-	if(dwarf.look(row,col) == EMPTY){
-	  if(dwarf.look(row,col+1) == PUMPKIN){
-	    dirs[dwarf.name()] = EAST;
-	    log << "Found PUMPKIN -- walking NAME:" << dwarf.name() << endl;
-	    walked[dwarf.name()] = true;
-	    pickNeeded[dwarf.name()] = true;
-	    dwarf.start_walk(row,col);
-	    return;
+  //Send the last two dwarves to look for pumpkins during the day
+  if(emptyPump == false && walked[dwarf.name()] == false && day > 4 && isDayTime(hours,minutes) && hidden[dwarf.name()] == false && pickNeeded[dwarf.name()] == false){
+    if(dwarf.name() == NUM-1){//Divide into 2 sections so that the dwarves dont collide
+      for(int row = 1; row < ROWS/2; row++){
+	for(int col = 1; col < COLS-1; col++){
+	  if(dwarf.look(row,col) == EMPTY){
+	    if(dwarf.look(row,col+1) == PUMPKIN){
+	      dirs[dwarf.name()] = EAST;
+	      log << "Found Pumpkin -- walking" << endl;
+	      walked[dwarf.name()] = true;
+	      pickNeeded[dwarf.name()] = true;
+	      dwarf.start_walk(row,col);
+	      return;
+	    }
+	    if(dwarf.look(row+1,col) == PUMPKIN){
+	      dirs[dwarf.name()] = SOUTH;
+	      log << "Found Pumpkin -- walking" << endl;
+	      walked[dwarf.name()] = true;
+	      pickNeeded[dwarf.name()] = true;
+	      dwarf.start_walk(row,col);
+	      return;
+	    }
+	    if(dwarf.look(row-1,col) == PUMPKIN){
+	      dirs[dwarf.name()] = NORTH;
+	      log << "Found Pumpkin -- walking" << endl;
+	      walked[dwarf.name()] = true;
+	      pickNeeded[dwarf.name()] = true;
+	      dwarf.start_walk(row,col);
+	      return;
+	    }
+	    if(dwarf.look(row,col-1) == PUMPKIN){
+	      dirs[dwarf.name()] = WEST;
+	      log << "Found Pumpkin -- walking" << endl;
+	      walked[dwarf.name()] = true;
+	      pickNeeded[dwarf.name()] = true;
+	      dwarf.start_walk(row,col);
+	      return;
+	    }
 	  }
-	  if(dwarf.look(row+1,col) == PUMPKIN){
-	    dirs[dwarf.name()] = SOUTH;
-	    log << "Found PUMPKIN -- walking NAME:" << dwarf.name() << endl;
-	    walked[dwarf.name()] = true;
-	    pickNeeded[dwarf.name()] = true;
-	    dwarf.start_walk(row,col);
-	    return;
-	  }
-	  if(dwarf.look(row-1,col) == PUMPKIN){
-	    dirs[dwarf.name()] = NORTH;
-	    log << "Found PUMPKIN -- walking NAME:" << dwarf.name() << endl;
-	    walked[dwarf.name()] = true;
-	    pickNeeded[dwarf.name()] = true;
-	    dwarf.start_walk(row,col);
-	    return;
-	  }
-	  if(dwarf.look(row,col-1) == PUMPKIN){
-	    dirs[dwarf.name()] = WEST;
-	    log << "Found PUMPKIN -- walking NAME:" << dwarf.name() << endl;
-	    walked[dwarf.name()] = true;
-	    pickNeeded[dwarf.name()] = true;
-	    dwarf.start_walk(row,col);
-	    return;
+	}
+      }
+    }
+    if(dwarf.name() == NUM-2){
+      for(int row = ROWS/2; row < ROWS-1; row++){
+	for(int col = 1; col < COLS-1; col++){
+	  if(dwarf.look(row,col) == EMPTY){
+	    if(dwarf.look(row,col+1) == PUMPKIN){
+	      dirs[dwarf.name()] = EAST;
+	      log << "Found Pumpkin -- walking" << endl;
+	      walked[dwarf.name()] = true;
+	      pickNeeded[dwarf.name()] = true;
+	      dwarf.start_walk(row,col);
+	      return;
+	    }
+	    if(dwarf.look(row+1,col) == PUMPKIN){
+	      dirs[dwarf.name()] = SOUTH;
+	      log << "Found Pumpkin -- walking" << endl;
+	      walked[dwarf.name()] = true;
+	      pickNeeded[dwarf.name()] = true;
+	      dwarf.start_walk(row,col);
+	      return;
+	    }
+	    if(dwarf.look(row-1,col) == PUMPKIN){
+	      dirs[dwarf.name()] = NORTH;
+	      log << "Found Pumpkin -- walking" << endl;
+	      walked[dwarf.name()] = true;
+	      pickNeeded[dwarf.name()] = true;
+	      dwarf.start_walk(row,col);
+	      return;
+	    }
+	    if(dwarf.look(row,col-1) == PUMPKIN){
+	      dirs[dwarf.name()] = WEST;
+	      log << "Found Pumpkin -- walking" << endl;
+	      walked[dwarf.name()] = true;
+	      pickNeeded[dwarf.name()] = true;
+	      dwarf.start_walk(row,col);
+	      return;
+	    }
 	  }
 	}
       }
     }
     emptyPump = true;
   }
+
   
-  /*
-  if(isDayTime(hours,minutes) && day > 6 && freed[dwarf.name()] == false){
-    dwarf.start_chop(NORTH);
-    freed[dwarf.name()] = true;
-    return;
-  }
-  */
-  
+
 
   
   
-  /*
-  if(walked[dwarf.name()] == true && pickNeeded[dwarf.name()] == true && isDayTime(hours,minutes)){//tells dwarf to pick
-    log << "Pick" << " Name: " << dwarf.name() << endl;
+  if(walkedToApple[dwarf.name()] && hidden[dwarf.name()]){//Tell dwarfs to pick apples all day and night
     dwarf.start_pick(dirs[dwarf.name()]);
-    // walked[dwarf.name()] = false;
-    //pickNeeded[dwarf.name()] = false;
     return;
   }
-  */
-  if(isDayTime(hours,minutes)){//DayTime Pine Tree. Finding and walking.     emptyPine[dwarf.name()] == false &&
-    if(dwarf.name() > (NUM/2 -1)){
-      changingRow = 0.5;
-    }
-    for(int row = changingRow * ROWS; row < (int)(ROWS * (0.5 + changingRow)); row++){//Tell dwarfs where to walk to get PINE_TREE
-      for(int col = (int)(sectorCols[dwarf.name()%(NUM/2)] * COLS); col < (int) (sectorCols[dwarf.name()%(NUM/2) + 1] * COLS); col++){
-	//log << dwarf.name() << " " << changingRow * ROWS << " " << (int)(ROWS * (0.5 + changingRow)) << "\n";
-	//log << dwarf.name() << " " << (int)(sectorCols[dwarf.name()%(NUM/2)] * COLS) << " " << (int) (sectorCols[dwarf.name()%(NUM/2) + 1] * COLS) << "\n";
-	if(dwarf.look(row,col) == EMPTY){
-	  if(emptyPine[dwarf.name()] == false){//Pine Trees
-	    if(dwarf.look(row,col+1) == PINE_TREE){
-	      dirs[dwarf.name()] = EAST;
-	      log << "Found tree -- walking NAME:" << dwarf.name() << endl;
-	      walked[dwarf.name()] = true;
-	      chopNeeded[dwarf.name()] = true;
-	      dwarf.start_walk(row,col);
-	      return;
-	    }
-	    if(dwarf.look(row+1,col) == PINE_TREE){
-	      dirs[dwarf.name()] = SOUTH;
-	      log << "Found tree -- walking NAME:" << dwarf.name() << endl;
-	      walked[dwarf.name()] = true;
-	      chopNeeded[dwarf.name()] = true;
-	      dwarf.start_walk(row,col);
-	      return;
-	    }
-	    if(dwarf.look(row-1,col) == PINE_TREE){
-	      dirs[dwarf.name()] = NORTH;
-	      log << "Found tree -- walking NAME:" << dwarf.name() << endl;
-	      walked[dwarf.name()] = true;
-	      chopNeeded[dwarf.name()] = true;
-	      dwarf.start_walk(row,col);
-	      return;
-	    }
-	    if(dwarf.look(row,col-1) == PINE_TREE){
-	      dirs[dwarf.name()] = WEST;
-	      log << "Found tree -- walking NAME:" << dwarf.name() << endl;
-	      walked[dwarf.name()] = true;
-	      chopNeeded[dwarf.name()] = true;
-	      dwarf.start_walk(row,col);
-	      return;
-	    }
-	  }
-	  else if(isNextToApple[dwarf.name()] == false){//Apples
-	    if(dwarf.look(row,col+1) == APPLE_TREE){
-	      dirs[dwarf.name()] = EAST;
-	      log << "Found Apple -- Walking" << endl;
-	      isNextToApple[dwarf.name()] = true;
-	      walked[dwarf.name()] = true;
-	      dwarf.start_walk(row,col);
-	      return;
-	    }
-	    if(dwarf.look(row+1,col) == APPLE_TREE){
-	      dirs[dwarf.name()] = SOUTH;
-	      log << "Found Apple -- Walking" << endl;
-	      isNextToApple[dwarf.name()] = true;
-	      walked[dwarf.name()] = true;
-	      dwarf.start_walk(row,col);
-	      return;
-	    }
-	    if(dwarf.look(row-1,col) == APPLE_TREE){
-	      dirs[dwarf.name()] = NORTH;
-	      log << "Found Apple -- Walking" << endl;
-	      isNextToApple[dwarf.name()] = true;
-	      walked[dwarf.name()] = true;
-	      dwarf.start_walk(row,col);
-	      return;
-	    }
-	    if(dwarf.look(row,col-1) == APPLE_TREE){
-	      dirs[dwarf.name()] = WEST;
-	      log << "Found Apple -- Walking" << endl;
-	      isNextToApple[dwarf.name()] = true;
-	      walked[dwarf.name()] = true;
-	      dwarf.start_walk(row,col);
-	      return;
-	    }
-	  }
-	}
-      }
-    }
-    emptyPine[dwarf.name()] = true;
-  }
-  
-
- 
-  
-
-
-
-
-
 
 
   
+
 }
 
 
  
-
-
-/*
-// Look if there is a tree on the right from the dwarf
-if (dwarf.look(r, c+1) == PINE_TREE) {
-// If there is a pine tree, chop it
-log << "Found a tree -- chop" << endl;
-dwarf.start_chop(EAST);
-return;
-}
-else if (dwarf.look(r+1, c) == PINE_TREE) {
-// If there is a pine tree, chop it
-log << "Found a tree -- chop" << endl;
-dwarf.start_chop(SOUTH);
-return;
-}
-else if (dwarf.look(r, c-1) == PINE_TREE) {
-// If there is a pine tree, chop it
-log << "Found a tree -- chop" << endl;
-dwarf.start_chop(WEST);
-return;
-}
-else if (dwarf.look(r-1, c) == PINE_TREE) {
-// If there is a pine tree, chop it
-log << "Found a tree -- chop" << endl;
-dwarf.start_chop(NORTH);
-return;
-}
-else {
-// Otherwise, move to a random location
-for(int row = 0; row < ROWS; row++){
-for(int col = 0; col < COLS; col++){
-if(isNextToAPineTree(dwarf,row,col)){
-log << "Walk to " << row << " " << col << endl;
-dwarf.start_walk(row, col);
-return;
-}
-}
-}
-}
-}
-
-*/
