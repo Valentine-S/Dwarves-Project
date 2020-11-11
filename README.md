@@ -1,5 +1,6 @@
 # C++ Dwarves Project
 <p> Requires libncurses5-dev to run. "Make" to build the exe. Then ./dwarves to run. "Make clean" to rm. Only bot.cpp was made by me, the rest of the files were provided.</p>
+
 ## Task A (dwarvesA)
 <p>1 dwarf traverses the map collecting pine trees. Lasts 1 Day.</p>
 
