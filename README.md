@@ -15,3 +15,7 @@
  Number of Apples Collected<br>
  Number of Pumpkins Collected<br>
 </p>
+
+
+
+![Day 1]("Project 3/Media/Day1.PNG")
