@@ -16,6 +16,20 @@
  Number of Pumpkins Collected<br>
 </p>
 
+## Day 1 
+
 <p align="center">
   <img src="Project 3/Media/Day1.PNG" width="350">
+</p>
+
+## Night Time
+
+<p align="center">
+  <img src="Project 3/Media/Nights.PNG" width="350">
+</p>
+
+## Finish State
+
+<p align="center">
+  <img src="Project 3/Media/Finish.PNG" width="350">
 </p>
