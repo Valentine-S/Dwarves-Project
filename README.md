@@ -16,6 +16,6 @@
  Number of Pumpkins Collected<br>
 </p>
 
-
-
-![Day 1]("Project 3/Media/Day1.PNG")
+<p align="center">
+  <img src="Project 3/Media/Day1.PNG" width="350">
+</p>
