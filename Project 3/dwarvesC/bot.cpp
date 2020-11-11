@@ -1,4 +1,4 @@
-//C2
+//Valentine Shidlovskiy
 #include <cstdlib>
 #include <cmath>
 #include <iostream>
@@ -319,7 +319,7 @@ void onAction(Dwarf &dwarf, int day, int hours, int minutes, ostream &log) {
   
   //Send the last two dwarves to look for pumpkins during the day
   if(emptyPump == false && walked[dwarf.name()] == false && day > 4 && isDayTime(hours,minutes) && hidden[dwarf.name()] == false && pickNeeded[dwarf.name()] == false){
-    log << "TEST" << endl;
+    //log << "TEST" << endl;
     if(dwarf.name() == NUM-1){//Divide into 2 sections so that the dwarves dont collide
       for(int row = 1; row < ROWS/2; row++){
 	for(int col = 1; col < COLS-1; col++){
@@ -417,6 +417,3 @@ void onAction(Dwarf &dwarf, int day, int hours, int minutes, ostream &log) {
   
 
 }
-
-
- 
